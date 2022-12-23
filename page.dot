@@ -1,0 +1,32 @@
+digraph Page {
+    rankdir=LR;
+    subgraph cluster_PageHeader {
+        node[shape=record];
+        header[label="uint64_t recordno|uint32_t mem_size|uint32_t entries \| uint32_t data_len|uint8_t type|uint8_t unused[2]"];
+    }
+
+    subgraph cluster_Ref {
+        node[shape=record]
+        label="wt_ref"
+        wt_ref[label="WT_PAGE *page|volatile uint32_t pindex_hint|volatile uint32_t state|void *addr|union \{uint64_t recno; void *ikey;\}key|<delete> WT_PAGE_DELETED *page_del|<las> WT_PAGE_LOOKASIDE *page_las"];
+        wt_update[label="<header> volatile uint64_t txnid|wt_timestamp_t timestamp|<next> WT_UPDATE *next|uint32_t size|uint8_t type|volatile uint8_t prepare_state|uint8_t data[]"];
+        wt_update2[label="<header> volatile uint64_t txnid|wt_timestamp_t timestamp|<next> WT_UPDATE *next|uint32_t size|uint8_t type|volatile uint8_t prepare_state|uint8_t data[]"];
+        wt_page_deleted[label="<header> volatile uint64_t txnid|wt_timestamp_t timestamp|volatile uint8_t prepare_state|uint32_t previous_state|<update_list> WT_UPDATE **update_list"];
+        wt_page_lookaside[label="<header> uint64_t las_pageid|uint64_t max_txn|uint64_t unstable_txn|wt_timestamp_t max_timestamp|wt_timestamp_t unstable_timestamp|bool eviction_to_lookaside|bool has_prepares|bool resolved|bool skew_newest"]
+        wt_update:next ->wt_update2:header;
+        wt_page_deleted:update_list -> wt_update:header;
+        wt_ref:delete -> wt_page_deleted:header;
+        wt_ref:las -> wt_page_lookaside:header
+    }
+    subgraph cluster_txn_global {
+        label="wt_txn_global";
+        node[shape=record];
+        wt_txn_global[label="volatile uint64_t current| volatile uint64_t last_running|volatile uint64_t oldest_id|wt_timestamp_t commit_timestamp| wt_timestamp_t last_ckpt_timestamp|wt_timestamp_t meta_ckpt_timestamp|wt_timestamp_t oldest_timestamp|wt_timestamp_t pinned_timestamp|wt_timestamp_t recovery_timestamp|wt_timestamp_t stable_timestamp|bool has_commit_timestamp|bool has_oldest_timestamp|bool has_pinned_timestamp|bool has_stable_timestamp|bool
+        oldest_is_pinned|bool stable_is_pinned|WT_SPINLOCK id_lock|WT_RWLOCK rwlock|WT_RWLOCK visibility_rwlock|WT_RWLOCK commit_timestamp_rwlock|TAILQ_HEAD(__wt_txn_cts_qh, __wt_txn) commit_timestamph|uint32_t commit_timestampq_len|WT_RWLOCK read_timestamp_rwlock|TAILQ_HEAD(__wt_txn_rts_qh, __wt_txn) read_timestamph|uint32_t read_timestampq_len|volatile bool checkpoint_running|volatile uint32_t
+        checkpoint_id|<checkpoint_state> WT_TXN_STATE checkpoint_state|wt_timestamp_t checkpoint_timestamp|volatile uint64_t debug_ops|uint64_t debug_rollback|volatile uint64_t metadata_pinned|WT_RWLOCK nsnap_rwlock|volatile uint64_t nsnap_oldest_id|TAILQ_HEAD(__wt_nsnap_qh, __wt_named_snapshot) nsnaph|<txn_state> WT_TXN_STATE *states"]
+       txn_state[label="<header> volatile uint64_t id| volatile uint64_t pinned_id|volatile uint64_t metadata_pinned"] 
+       txn_state2[label="<header> volatile uint64_t id| volatile uint64_t pinned_id|volatile uint64_t metadata_pinned"] 
+       wt_txn_global:txn_state -> txn_state:header
+       wt_txn_global:checkpoint_state -> txn_state2:header
+    }
+}
