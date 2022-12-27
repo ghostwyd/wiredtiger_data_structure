@@ -1,0 +1,8 @@
+digraph {
+    rankdir=LR
+    subgraph cluster_data_hanle {
+        node[shape=record]
+        wt_data_handle[label="WT_DATA_HANDLE|WT_RWLOCK rwlock|TAILQ_ENTRY(__wt_data_handle) q|TAILQ_ENTRY(__wt_data_handle) hashq|const char *name|uint64_t name_hash|const char *checkpoint|const char **cfg|uint32_t session_ref|int32_t session_inuse|uint32_t excl_ref|time_t timeofdeath|WT_SESSION_IMPL *excl_session|WT_DATA_SOURCE *dsrc| void *handle|enum \{ WT_DHANDLE_TYPE_BTREE, WT_DHANDLE_TYPE_TABLE \} type| bool compact_skip|WT_SPINLOCK close_lock|WT_DSRC_STATS
+        *stats[WT_COUNTER_SLOTS]|WT_DSRC_STATS *stat_array|uint32_t flags"]
+    }
+}

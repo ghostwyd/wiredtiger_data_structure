@@ -1,0 +1,38 @@
+digraph {
+    node[shape=record]
+    rankdir=LR
+    subgraph cluster_cache {
+        __wt_cache[label="
+            uint64_t bytes_dirty_intl|
+            uint64_t pages_dirty_intl|
+            uint64_t bytes_dirty_leaf |
+            uint64_t bytes_dirty_total|
+            uint64_t pages_dirty_leaf |
+            uint64_t bytes_evict |
+            uint64_t pages_evicted|
+            uint64_t bytes_image|
+            uint64_t bytes_inmem|
+            uint64_t bytes_internal|
+            uint64_t bytes_read|
+            uint64_t bytes_written|
+            uint64_t bytes_lookaside|
+            volatile uint64_t eviction_progress|
+            uint64_t last_eviction_progress|
+            uint64_t app_waits|
+            uint64_t app_evicts|
+            uint64_t server_evicts|
+            uint64_t worker_evicts|
+            uint64_t evict_max_page_size|
+            struct timespec stuck_time|
+            uint64_t read_gen|
+            uint64_t read_gen_oldest|
+            uint64_t evict_pass_gen|
+            WT_CONDVAR *evict_cond|
+            WT_SPINLOCK evict_walk_lock|
+            double eviction_dirty_target|
+            double eviction_dirty_trigger|
+            double eviction_trigger|
+            double eviction_target
+        "]
+    }
+}

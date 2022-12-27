@@ -1,0 +1,16 @@
+digraph {
+    rankdir=LR
+    node[shape=record]
+    subgraph cluster_wt_ckpt {
+        label="__wt_ckpt"
+        wt_ckpt[label="<header> char *name|WT_ITEM addr|WT_ITEM raw|int64_t order|uintmax_t sec|uint64_t ckpt_size|uint64_t write_gen|void *bpriv; /* Block manager private */|uint32_t flags"]
+    }
+    subgraph cluster_wt_btree {
+        label="wt_btree"
+        wt_btree[label="WT_DATA_HANDLE *dhandle|<ckpt> WT_CKPT *ckpt|const char *key_format|const char *value_format|uint8_t bitcnt|WT_COLLATOR *collator|int collator_owned|uint32_t id|uint32_t key_gap|uint32_t allocsize|uint32_t maxintlpage|uint32_t maxintlkey|uint32_t maxleafpage|uint32_t maxleafkey|uint32_t maxleafvalue|uint64_t maxmempage|uint32_t maxmempage_image|uint64_t splitmempage|uint32_t assert_flags|void *huffman_key|void *huffman_value|u_int dictionary|bool
+        internal_key_truncate|bool prefix_compression|u_int prefix_compression_min|u_int split_deepen_min_child|u_int split_deepen_per_child|int split_pct|WT_COMPRESSOR *compressor|bool leafpage_compadjust|uint64_t maxleafpage_precomp|bool intlpage_compadjust|uint64_t maxintlpage_precomp|WT_KEYED_ENCRYPTOR *kencryptor|WT_RWLOCK ovfl_lock| int maximum_depth|u_int rec_multiblock_max|uint64_t last_recno|WT_REF root|bool modified|uint8_t original|bool lookaside_entries|bool lsm_primary| WT_BM
+        *bm|u_int block_heade|uint64_t write_gen|uint64_t rec_max_txn|wt_timestamp_t rec_max_timestamp|uint64_t checkpoint_gen|WT_SESSION_IMPL *sync_session|volatile enum\{\nWT_BTREE_SYNC_OFF,\n WT_BTREE_SYNC_WAIT,\n WT_BTREE_SYNC_RUNNING\}syncing|uint64_t bytes_inmem|uint64_t bytes_dirty_intl|uint64_t bytes_dirty_leaf|uint64_t bytes_dirty_total| uint64_t file_max|WT_SPINLOCK flush_lock|WT_REF *evict_ref|uint64_t evict_priority|uint32_t evict_walk_progress|uint32_t evict_walk_target|u_int
+        evict_walk_period|u_int evict_walk_period|u_int evict_walk_saved|u_int evict_walk_skips|int32_t evict_disabled|bool evict_disabled_open|volatile uint32_t evict_busy|bool evict_disabled_open|volatile uint32_t evict_busy|enum\{\nWT_EVICT_WALK_NEXT,\nWT_EVICT_WALK_PREV,\nWT_EVICT_WALK_RAND_NEXT,\nWT_EVICT_WALK_RAND_PREV\}evict_start_type|uint32_t flags"] 
+   }
+   wt_btree:ckpt -> wt_ckpt:header
+}

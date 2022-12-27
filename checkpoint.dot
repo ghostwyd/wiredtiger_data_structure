@@ -1,0 +1,222 @@
+digraph {
+    rankdir=LR
+    node[shape=record]
+    subgraph cluster_wt_ckpt {
+        label="wt_ckpt"
+        wt_ckpt[label="WT_CKPT|char* name|
+        WT_ITEM addr|
+        <raw>WT_ITEM raw|
+        int64_t order|
+        uintmax_t sec|
+        uint64_t ckpt_size|
+        uint64_t write_gen|
+        void *bpriv /*block manager private*/|
+        uint32_t flag"]
+
+        ckpt_layout[label="root_offset|root_size|root_checksum|
+        <alloc> alloc_offset|alloc_size|alloc_checksum|
+        <avail> avail_offset|avail_size|avail_checksum|
+        <discard> discard_offset|discard_size|discard_checksum"]
+
+        wt_block_ckpt[label="WT_BLOCK_CKPT|uint version|
+        wt_off_t root_offset|
+        uint32_t root_checksum|
+        <alloc> WT_EXTLIST alloc|
+        <avail> WT_EXTLIST avail|
+        <discard> WT_EXTLIST discard|
+        wt_off_t file_size|
+        uint64_t ckpt_size|
+        <avail_extlist> WT_EXTLIST ckpt_avail|
+        <alloc_extlist> WT_EXTLIST ckpt_alloc|
+        <discard_extlist> WT_EXTLIST ckpt_discard"]
+        
+        wt_block[label="
+            WT_BLOCK|
+            const char *name|
+            uint64_t name_hash|
+            uint32_t ref|
+            TAILQ_ENTRY(__wt_block) q|
+            TAILQ_ENTRY(__wt_block) hashq|
+            WT_FH *fh|
+            wt_off_t size|
+            wt_off_t extend_size|
+            wt_off_t extend_len|
+            uint32_t allocfirst|
+            uint32_t allocsize|
+            size_t os_cache|
+            size_t os_cache_max|
+            size_t os_cache_dirty_max|
+            u_int block_header|
+            WT_SPINLOCK live_lock|
+            WT_BLOCK_CKPT live; /* Live checkpoint */|
+            ckpt_state/*WT_CKPT_NONE|WT_CKPT_INPROGRESS|WT_CKPT_PANIC_ON_FAILURE|WT_CKPT_SALVAGE*/|
+            int compact_pct_tenths|
+            uint64_t compact_pages_reviewed|
+            uint64_t compact_pages_skipped|
+            uint64_t compact_pages_written|
+            wt_off_t slvg_off|
+            bool verify|
+            bool verify_layout|
+            bool verify_strict| 
+            wt_off_t verify_size|
+            WT_EXTLIST verify_alloc|
+            uint64_t frags|
+            uint8_t *fragfile|
+            uint8_t *fragckpt "]
+
+        wt_extlist[label="WT_EXTLIST|char* name|
+            uint64_t bytes |
+            uint32_t entries |
+            wt_off_t offset |
+            uint32_t checksum |
+            uint32_t size |
+            bool track_size |
+            WT_EXT *last |
+            WT_EXT *off[WT_SKIP_MAXDEPTH] | 
+            WT_SIZE *sz[WT_SKIP_MAXDEPTH]
+        "]
+
+        wt_ckpt:raw -> ckpt_layout
+        ckpt_layout:avail -> wt_block_ckpt:avail
+        ckpt_layout:alloc -> wt_block_ckpt:alloc
+        ckpt_layout:discard -> wt_block_ckpt:discard
+        wt_block_ckpt:avail_extlist -> wt_extlist  
+    }
+
+    subgraph cluster_checkpoint_call {
+        label="数据写入调用关系"
+        //node[shape=circle]
+
+        __wt_block_checkpoint[label="__wt_block_checkpoint"]
+        __ckpt_process[label="__ckpt_process//处理ckpt,写入alloc_list/avail_list/discard_list信息"]
+        __ckpt_extlist_read[label="__ckpt_extlist_read//读取ext_list信息"]
+        __wt_block_insert_ext[label="__wt_block_insert_ext//将block放入到ext_list中"]
+        __ckpt_extlist_fblocks[label="__ckpt_extlist_fblocks//回收block"]
+        __wt_block_extlist_merge[label="__wt_block_extlist_merge//合并相邻的ext_list"]
+        __wt_block_extlist_overlap[label="__wt_block_extlist_overlap//去除alloc_list/discard_list的交集"]
+        __ckpt_update[label="__ckpt_update //重写checkpoint的alloc_list/discard_list和avail_list"]
+        __bm_checkpoint[label="__bm_checkpoint"]
+        __bm_write[label="__bm_write"]
+        __wt_bt_write[label="__wt_bt_write"]
+        __wt_block_write[label="__wt_block_write"]
+        __wt_block_write_off[label="__wt_block_write_off"]
+        __block_write_off[label="__block_write_off"]
+        __wt_block_alloc[label="__wt_block_alloc"]
+        __wt_block_extend[label="__wt_block_extend"]
+        __wt_write[label="__wt_write"]
+        __wt_fsync[label="__wt_fsync"]
+        __wt_block_off_free[label="__wt_block_off_free/*写失败后回收block*/"]
+        __rec_split_write[label="__rec_split_write"]
+        __rec_write_wrapup[label="__rec_write_wrapup"]
+        __wt_rec_cell_build_ovfl[label="__wt_rec_cell_build_ovfl"]
+        __rec_cell_build_leaf_key[label="__rec_cell_build_leaf_key"]
+        __rec_cell_build_int_key[label="__rec_cell_build_int_key"]
+        __wt_rec_row_int[label="__wt_rec_row_int"]
+        __rec_row_merge[label="__rec_row_merge"]
+        __reconcile[label="__reconcile"]
+        __wt_checkpoint_close[label="__wt_checkpoint_close"]
+        __checkpoint_lock_dirty_tree[label="__checkpoint_lock_dirty_tree"]
+        __checkpoint_tree_helper[label="__checkpoint_tree_helper"]
+        __txn_checkpoint[label="__txn_checkpoint"]
+        __txn_checkpoint_wrapper[label="__txn_checkpoint_wrapper"]
+        __wt_txn_checkpoint[label="__wt_txn_checkpoint"]
+        __compact_checkpoint[label="__compact_checkpoint"]
+        __session_checkpoint[label="__session_checkpoint"]
+        __conn_close[label="__conn_close"]
+        __compact_worker[label="__compact_worker"]
+        __wt_session_compact[label="__wt_session_compact"]
+        WiredTigerRecordStore[label="WiredTigerRecordStore::compact"]
+        WiredTigerIndexStore[label="WiredTigerIndexStore::compact"]
+        __wt_compact[label="__wt_compact"]
+
+        __bm_checkpoint -> __wt_block_checkpoint
+        __wt_block_checkpoint -> __ckpt_process
+        __ckpt_process -> __ckpt_extlist_read
+        __ckpt_process -> __wt_block_insert_ext
+        __ckpt_process -> __wt_block_extlist_merge
+        __ckpt_process -> __ckpt_extlist_fblocks 
+        __ckpt_process -> __wt_block_extlist_overlap
+        __ckpt_process -> __ckpt_update 
+        __wt_bt_write -> __bm_checkpoint
+        __wt_bt_write -> __bm_write
+        __bm_write -> __wt_block_write
+        __wt_block_write -> __wt_block_write_off
+        __wt_block_write_off -> __block_write_off
+        __block_write_off -> __wt_block_alloc
+        __block_write_off -> __wt_block_extend 
+        __block_write_off -> __wt_write
+        __block_write_off -> __wt_fsync
+        __block_write_off -> __wt_block_off_free 
+        __rec_split_write -> __wt_bt_write
+        __rec_write_wrapup -> __wt_bt_write
+        __wt_rec_cell_build_ovfl -> __wt_bt_write
+        __rec_cell_build_leaf_key -> __wt_rec_cell_build_ovfl
+        __rec_cell_build_int_key -> __wt_rec_cell_build_ovfl
+        __rec_row_merge -> __rec_cell_build_int_key
+        __wt_rec_row_int -> __rec_cell_build_int_key 
+        __wt_rec_row_int -> __rec_row_merge
+        __reconcile -> __wt_rec_row_int
+        __wt_checkpoint_close -> __checkpoint_tree
+        __wt_checkpoint -> __checkpoint_tree
+        __wt_checkpoint -> __checkpoint_lock_dirty_tree
+        __checkpoint_tree_helper -> __checkpoint_tree
+        __txn_checkpoint -> __wt_checkpoint
+        __txn_checkpoint_wrapper -> __txn_checkpoint
+        __wt_txn_checkpoint -> __txn_checkpoint_wrapper
+        __compact_checkpoint -> __wt_txn_checkpoint
+        __session_checkpoint -> __wt_txn_checkpoint
+        __conn_close -> __wt_txn_checkpoint
+        WiredTigerCheckpointThread -> __session_checkpoint 
+        __compact_worker -> __compact_checkpoint
+        __compact_worker -> __wt_compact
+        __wt_session_compact -> __compact_worker
+        WiredTigerRecordStore -> __wt_session_compact
+        WiredTigerIndexStore -> __wt_session_compact
+        
+        __checkpoint_tree[label="__checkpoint_tree"]
+        __wt_txn_checkpoint_log[label="__wt_txn_checkpoint_log"]
+        __bm_checkpoint_start[label="__bm_checkpoint_start"]
+        __wt_cache_op[label="__wt_cache_op"]
+        __sync_file[label="__sync_file"]
+        __wt_tree_walk[label="__wt_tree_walk"]
+        __wt_reconcile[label="__wt_reconcile"]
+        __reconcile[label="__reconcile"]
+        __wt_rec_row_int[label="__wt_rec_row_int"]
+        __wt_rec_row_leaf[label="__wt_rec_row_leaf"]
+        __wt_rec_col_var[label="__wt_rec_col_var"]
+
+        __checkpoint_tree -> __wt_txn_checkpoint_log
+        __checkpoint_tree -> __bm_checkpoint_start
+        __checkpoint_tree -> __wt_cache_op
+        __wt_cache_op -> __sync_file
+        __sync_file -> __wt_tree_walk 
+        __wt_tree_walk -> __wt_reconcile 
+        __wt_reconcile -> __reconcile
+        __reconcile -> __wt_rec_row_int
+        __reconcile -> __wt_rec_row_leaf
+        __reconcile -> __wt_rec_col_var
+
+    }
+    subgraph cluster_block_free {
+        label="block回收调用关系"
+        __wt_ref_block_free[label="__wt_ref_block_free"]
+        __wt_btree_block_free[label="__wt_btree_block_free"]
+        __wt_ref_addr_free[label="__wt_ref_addr_free"]
+        __bm_free[label="__bm_free"]
+        __wt_block_free[label="__wt_block_free"]
+        __wt_block_buffer_to_addr[label="__wt_block_buffer_to_addr"]
+        __wt_block_off_free[label="__wt_block_off_free"]
+        __wt_block_off_remove_overlap[label="__wt_block_off_remove_overlap"]
+
+        __block_merge[label="__block_merge"]
+        __wt_ref_block_free -> __wt_btree_block_free
+        __wt_ref_block_free -> __wt_ref_addr_free
+        __wt_btree_block_free -> __bm_free
+        __bm_free -> __wt_block_free
+        __wt_block_free -> __wt_block_buffer_to_addr
+        __wt_block_free -> __wt_block_off_free
+        __wt_block_off_free -> __wt_block_off_remove_overlap
+        __wt_block_off_free -> __block_merge
+    }
+}
+
