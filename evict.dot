@@ -1,0 +1,98 @@
+digraph {
+    node[shape=record]
+    rankdir=LR
+    subgraph cluster_evict{
+        __wt_evict_create[label="__wt_evict_create"]
+        __wt_thread_group_create[label="__wt_thread_group_create"]
+        __wt_evict_thread_chk[label="__wt_evict_thread_chk"]
+        __wt_evict_thread_run[label="__wt_evict_thread_run"]
+        __evict_lru_pages[label="__evict_lru_pages/*从LRU queue中找到page做evict*/"]
+        __evict_page[label="__evict_page"]
+        __evict_get_ref[label="__evict_get_ref/*Get a page for eviction*/"]
+        __wt_evict[label="__wt_evict/*真正执行evict动作*/"]
+        
+        __wt_evict_create -> __wt_thread_group_create
+        __wt_thread_group_create -> __wt_evict_thread_chk
+        __wt_thread_group_create -> __wt_evict_thread_run
+        __wt_thread_group_create -> __wt_evict_thread_stop
+        __wt_evict_thread_run -> __evict_lru_pages
+        __evict_lru_pages -> __evict_page
+        __evict_page -> __evict_get_ref
+
+        __wt_evict_queue[label="
+            WT_EVICT_QUEUE|
+            WT_SPINLOCK evict_lock|
+            WT_EVICT_ENTRY *evict_queue|
+            <evict_entry> WT_EVICT_ENTRY *evict_current|
+            uint32_t evict_candidates|
+            uint32_t evict_entries|
+            volatile uint32_t evict_max"]
+        __wt_evict_entry[label="
+            WT_EVICT_ENTRY|
+            WT_BTREE *btree|
+            WT_REF *ref|
+            uint64_t score"]
+        __wt_evict_queue:evict_entry -> __wt_evict_entry
+
+        __evict_page[label="__evict_page"]
+        __wt_evict[label="__wt_evict"]
+        __evict_exclusive[label="__evict_exclusive"]
+        __wt_evict_list_clear_page[label="__wt_evict_list_clear_page"]
+        __evict_page_dirty_update[label="__evict_page_dirty_update"]
+        __evict_page_clean_update[label="__evict_page_clean_update"]
+        __evict_review[label="__evict_review"]
+        __wt_reconcile[label="__wt_reconcile"]
+        __evict_get_ref[label="__evict_get_ref"]
+        __evict_queue_empty[label="__evict_queue_empty"]
+        __evict_queue_full[label="__evict_queue_full"]
+        __evict_list_clear[label="__evict_list_clear"]
+
+        __evict_page -> __wt_evict
+        __wt_evict -> __wt_evict_list_clear_page 
+        __wt_evict -> __wt_list_clear_page
+        __wt_evict -> __evict_review
+        __evict_review -> __wt_reconcile
+        __wt_evict -> __evict_page_dirty_update
+        __wt_evict -> __evict_page_clean_update
+
+        __evict_get_ref -> __evict_queue_empty
+        __evict_get_ref -> __evict_queue_full
+        __evict_get_ref -> __evict_list_clear
+    }
+
+    subgraph cluster_evict_flow {
+        __evict_walk_tree[label="__evict_walk_tree"]
+        __evict_walk_target[label="__evict_walk_target/*Calculate how many pages to queue for a given tree*/"]
+        __wt_random_descent[label="__wt_random_descent"]
+        __wt_tree_walk_count[label="__wt_tree_walk_count"]
+        __wt_page_evict_urgent[label="__wt_page_evict_urgent"]
+
+        __evict_push_candidate[label="__evict_push_candidate /*设置evict的btree/ref/score等信息*/"]
+        __evict_entry_priority[label="__evict_entry_priority /* 设置page evict的priority, priority跟page的readgen/update_txn/memory_footprint有关系*/"]
+        __evict_list_clear[label="清空evict\-\>ref"]
+        __tree_walk_internal[label="__tree_walk_internal /*遍历tree*/"]
+        __evict_lru_walk[label="__evict_lru_walk"]
+        __evict_walk[label="__evict_walk"]
+        __wt_qsort[label="__wt_qsort/*按照score做升序排列*/"]
+        __evict_walk[label="__evict_walk"]
+        __evict_pass[label="__evict_pass"]
+        __evict_server[label="__evict_server"]
+
+        __wt_page_evict_urgent -> __evict_push_candidate
+        __evict_push_candidate -> __evict_entry_priority
+        __evict_push_candidate -> __evict_list_clear
+
+        __wt_evict_thread_run -> __evict_server
+        __evict_server -> __evict_pass
+        __evict_pass -> __evict_lru_walk
+        __evict_pass -> __evict_lru_pages
+        __evict_lru_walk -> __evict_walk
+        __evict_lru_walk -> __wt_qsort
+        __evict_walk -> __evict_walk_tree
+        __evict_walk_tree -> __evict_walk_target
+        __evict_walk_tree -> __wt_random_descent
+        __evict_walk_tree -> __wt_tree_walk_count
+        __evict_walk_tree -> __wt_page_evict_urgent
+        __wt_tree_walk_count -> __tree_walk_internal
+    }
+}

@@ -51,4 +51,6 @@ digraph Page {
         wt_ref:page -> wt_page
         wt_page:page_header -> page_header
     }
+
+    __wt_page_in_func[label="__wt_page_in_func"]
 }
